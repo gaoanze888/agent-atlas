@@ -1,0 +1,46 @@
+{
+  "name": "agent-atlas",
+  "version": "0.1.0",
+  "description": "A visual state map for AI agents — see what your agent remembers, tried, decided, and plans next.",
+  "type": "module",
+  "bin": {
+    "agent-atlas": "./dist/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "lint": "tsc --noEmit"
+  },
+  "keywords": [
+    "ai-agent",
+    "memory",
+    "visualization",
+    "mcp",
+    "exploration-map",
+    "context",
+    "coding-agent",
+    "developer-tools"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.4",
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "better-sqlite3": "^11.7.0",
+    "chokidar": "^4.0.0",
+    "commander": "^12.1.0",
+    "hono": "^4.6.0",
+    "nanoid": "^5.0.0",
+    "yaml": "^2.6.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/node": "^22.0.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
