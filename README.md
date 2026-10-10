@@ -96,6 +96,10 @@ Agent Atlas (local service)
 
 **Atlas does NOT call LLMs.** It has no API keys. All intelligence stays in your agent — Atlas just stores, visualizes, and organizes.
 
+### Real-time updates
+
+The Web UI connects via WebSocket and updates instantly as your agent records progress. Falls back to polling if WebSocket is unavailable.
+
 ---
 
 ## Single Source of Truth
@@ -139,7 +143,25 @@ agent-atlas serve
 
 Open **http://localhost:8765** to see your Atlas.
 
-### Connect your agent via MCP
+### Option A: pi extension (deepest integration)
+
+Copy or symlink the extension into pi's extensions directory:
+
+```bash
+ln -s /path/to/agent-atlas/adapters/pi-extension/agent-atlas.ts ~/.pi/agent/extensions/agent-atlas.ts
+```
+
+The extension gives you:
+
+- **Automatic context injection** — every turn, the agent receives the current Atlas state (goal, memories, decisions, dead ends, blockers, direction) so it never retries failed paths or forgets decisions. No manual tool calls needed.
+- **Native tools** — `atlas_record_path`, `atlas_record_decision`, `atlas_set_direction`, `atlas_get_map` registered in-process.
+- **`/atlas` command** — opens the visual map in your browser.
+- **`/atlas-off` / `/atlas-on`** — toggle context injection per session.
+- **Auto-start** — launches the Atlas server automatically if it's not running.
+
+Requires `typebox` in `~/.pi/agent/node_modules` (run `npm install typebox` in `~/.pi/agent/`).
+
+### Option B: MCP (Claude Code / Cursor / Codex / any MCP client)
 
 Add to your agent's MCP config:
 
