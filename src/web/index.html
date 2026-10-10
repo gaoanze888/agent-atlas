@@ -148,19 +148,21 @@ const STATUS_COLORS = { open:'var(--yellow)', success:'var(--green)', failed:'va
 const NODE_COLORS = { goal:'var(--gold)', path:'var(--blue)', attempt:'var(--blue)', decision:'var(--purple)', evidence:'var(--gray)', blocker:'var(--red)', dead_end:'var(--darkred)', next_step:'var(--green)' };
 const EDGE_COLORS = { supports:'var(--green)', blocks:'var(--red)', contradicts:'var(--red)', supersedes:'var(--purple)', used_by:'var(--cyan)' };
 
-let nodes = [], edges = [], evidenceCache = {};
+let nodes = [], edges = [], evidenceCache = {}, memories = [], memSearch = '';
 let selectedId = null, currentFilter = 'all', editingId = null;
 let expandedNodes = new Set();
 let viewBox = { x: 0, y: 0, w: 800, h: 600 };
 let isPanning = false, panStart = { x: 0, y: 0 };
 
 async function load() {
-  const [nodesRes, edgesRes] = await Promise.all([
+  const [nodesRes, edgesRes, memRes] = await Promise.all([
     fetch(`${API}/api/nodes`).then(r => r.json()),
     fetch(`${API}/api/edges`).then(r => r.json()),
+    fetch(`${API}/api/memories`).then(r => r.json()).catch(() => []),
   ]);
   nodes = nodesRes;
   edges = edgesRes;
+  memories = memRes;
   render();
 }
 
@@ -227,6 +229,28 @@ function renderTree() {
   getRootNodes().forEach(n => rn(n, 0));
   // Orphan nodes (no parent, not in tree)
   nodes.filter(n => n.parentId && !nodes.find(p => p.id === n.parentId)).forEach(n => rn(n, 0));
+  // Memory section (show limited count, searchable)
+  if (memories.length > 0) {
+    const shown = memSearch ? memories.filter(m => m.content.toLowerCase().includes(memSearch)).slice(0, 30) : memories.slice(0, 20);
+    html += '<div style="padding:8px 12px;margin-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px;display:flex;justify-content:space-between;align-items:center">';
+    html += `<span>Memory (${memories.length})</span>`;
+    html += '</div>';
+    if (memSearch) {
+      html += `<div style="padding:2px 12px;font-size:10px;color:var(--text3)">filtered by "${esc(memSearch)}" — ${shown.length} shown</div>`;
+    }
+    shown.forEach(m => {
+      const op = m.status !== 'active' ? 'opacity:0.4;' : '';
+      const sel = selectedId === `mem_${m.id}` ? ' selected' : '';
+      html += `<div class="tree-node${sel}" style="${op}" onclick="selectMemory('${m.id}')">`;
+      html += '<span class="icon">🧠</span>';
+      html += `<span class="title">${esc(m.content.slice(0, 40))}${m.content.length > 40 ? '…' : ''}</span>`;
+      html += `<span class="dot" style="background:var(--cyan)"></span>`;
+      html += '</div>';
+    });
+    if (!memSearch && memories.length > 20) {
+      html += `<div style="padding:4px 12px;font-size:10px;color:var(--text3)">…and ${memories.length - 20} more (use search)</div>`;
+    }
+  }
   el.innerHTML = html || '<div style="padding:12px;color:var(--text3);font-size:11px">No nodes</div>';
 }
 
@@ -322,6 +346,24 @@ function renderGraph() {
 
 async function renderDetail() {
   const el = document.getElementById('detail');
+  // Check if selected is a memory
+  if (selectedId && selectedId.startsWith('mem_')) {
+    const memId = selectedId.replace('mem_', '');
+    const mem = memories.find(m => m.id === memId);
+    if (!mem) { el.innerHTML = '<div class="detail-empty">Memory not found</div>'; return; }
+    let h = '';
+    h += '<div class="detail-header"><span class="icon">🧠</span><div class="info"><div class="detail-type">memory</div><div class="detail-title">' + esc(mem.content) + '</div></div></div>';
+    h += '<div class="detail-badges">';
+    h += `<span class="badge badge-status st-${mem.status}">${mem.status}</span>`;
+    h += `<span class="badge badge-scope">${esc(mem.scope)}</span>`;
+    if (mem.tags) mem.tags.forEach(t => h += `<span class="badge badge-tag">#${esc(t)}</span>`);
+    h += '</div>';
+    h += `<div class="detail-section"><h4>Source</h4><p>${esc(mem.source)}</p></div>`;
+    if (mem.confidence) h += `<div class="detail-section"><h4>Confidence</h4><p>${mem.confidence}</p></div>`;
+    el.innerHTML = h;
+    return;
+  }
+
   if (!selectedId) { el.innerHTML = '<div class="detail-empty">Select a node to view details</div>'; return; }
   const node = nodes.find(n => n.id === selectedId);
   if (!node) { el.innerHTML = '<div class="detail-empty">Node not found</div>'; return; }
@@ -420,6 +462,7 @@ function renderDirection() {
 
 // Actions
 window.selectNode = function(id) { selectedId = id; editingId = null; evidenceCache = {}; render(); };
+window.selectMemory = function(id) { selectedId = `mem_${id}`; editingId = null; renderDetail(); };
 window.toggleExpand = function(id) { expandedNodes.has(id) ? expandedNodes.delete(id) : expandedNodes.add(id); renderTree(); };
 window.startEdit = function(id) { editingId = id; renderDetail(); };
 window.cancelEdit = function() { editingId = null; renderDetail(); };
@@ -485,9 +528,10 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
   });
 });
 
-// Search
+// Search (filters both atlas nodes and memories)
 document.getElementById('search').addEventListener('input', async e => {
-  const q = e.target.value.trim();
+  const q = e.target.value.trim().toLowerCase();
+  memSearch = q;
   if (!q) { await load(); return; }
   nodes = await fetch(`${API}/api/search?q=${encodeURIComponent(q)}`).then(r => r.json());
   render();
@@ -496,8 +540,17 @@ document.getElementById('search').addEventListener('input', async e => {
 function esc(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
 function fmtTime(s) { try { const d = new Date(s); const now = new Date(); const diff = (now - d) / 1000; if (diff < 60) return 'just now'; if (diff < 3600) return `${Math.floor(diff/60)}m ago`; if (diff < 86400) return `${Math.floor(diff/3600)}h ago`; return d.toLocaleDateString(); } catch { return s; } }
 
-// Auto-refresh
-setInterval(load, 3000);
+// Real-time updates via WebSocket (fallback to polling)
+let wsConnected = false;
+try {
+  const ws = new WebSocket(`ws://${window.location.host}/ws`);
+  ws.onopen = () => { wsConnected = true; };
+  ws.onmessage = (e) => { load(); };
+  ws.onclose = () => { wsConnected = false; };
+  ws.onerror = () => { wsConnected = false; };
+} catch {}
+// Fallback polling if WS not connected
+setInterval(() => { if (!wsConnected) load(); }, 3000);
 // Expand all on first load
 nodes.forEach(n => { if (getChildren(n.id).length > 0) expandedNodes.add(n.id); });
 load().then(() => { nodes.forEach(n => { if (getChildren(n.id).length > 0) expandedNodes.add(n.id); }); renderTree(); });

@@ -4,6 +4,7 @@ export default defineConfig({
   entry: {
     "cli/index": "src/cli/main.ts",
     "mcp/index": "src/mcp/server.ts",
+    "api/server": "src/api/server.ts",
   },
   format: ["esm"],
   target: "node22",

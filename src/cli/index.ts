@@ -52,8 +52,16 @@ contextPack:
     .description("Start web UI + API server")
     .option("-p, --port <port>", "Port", "8765")
     .action(async (opts) => {
+      // Load memories from data sources
+      let memories: any[] = []
+      try {
+        const { PiMemoryAdapter } = await import("../sources/pi-memory.js")
+        const adapter = new PiMemoryAdapter()
+        await adapter.init()
+        memories = await adapter.list()
+      } catch {}
       const { serveApi } = await import("../api/server.js")
-      await serveApi(parseInt(opts.port))
+      await serveApi(parseInt(opts.port), memories)
     })
 
   program

@@ -8,8 +8,9 @@ import { buildContextPack, contextPackToText } from "../core/context-pack.js"
 import type { NodeType, NodeStatus, EdgeType, EvidenceKind } from "../core/types.js"
 import path from "node:path"
 import fs from "node:fs"
+import { WebSocket, WebSocketServer } from "node:ws"
 
-export async function serveApi(port: number): Promise<void> {
+export async function serveApi(port: number, memoryItems?: any[]): Promise<void> {
   const app = new Hono()
   const db = initDb()
   const nodeStore = new NodeStore(db)
@@ -97,6 +98,10 @@ export async function serveApi(port: number): Promise<void> {
     return c.json(ev, 201)
   })
 
+  // Memories (from data sources, passed in at startup)
+  const _memories = memoryItems || []
+  app.get("/api/memories", (c) => c.json(_memories))
+
   // Context Pack
   app.get("/api/context-pack", (c) => {
     const allNodes = nodeStore.list()
@@ -137,6 +142,44 @@ export async function serveApi(port: number): Promise<void> {
     })
   }
 
+  // WebSocket for real-time updates
+  const wss = new WebSocketServer({ noServer: true })
+  const wsClients = new Set<WebSocket>()
+
+  wss.on('connection', (ws) => {
+    wsClients.add(ws)
+    ws.on('close', () => wsClients.delete(ws))
+  })
+
+  function broadcast(event: string, data: any) {
+    const msg = JSON.stringify({ event, data })
+    for (const ws of wsClients) {
+      if (ws.readyState === WebSocket.OPEN) ws.send(msg)
+    }
+  }
+
+  // Wrap node creation to broadcast
+  const origCreate = nodeStore.create.bind(nodeStore)
+  nodeStore.create = function(...args: any[]) {
+    const node = origCreate(...args)
+    broadcast('node.created', node)
+    return node
+  }
+
+  const origUpdate = nodeStore.update.bind(nodeStore)
+  nodeStore.update = function(...args: any[]) {
+    const node = origUpdate(...args)
+    if (node) broadcast('node.updated', node)
+    return node
+  }
+
+  const origDelete = nodeStore.delete.bind(nodeStore)
+  nodeStore.delete = function(...args: any[]) {
+    const ok = origDelete(...args)
+    if (ok) broadcast('node.deleted', { id: args[0] })
+    return ok
+  }
+
   console.log(`🗺️  Agent Atlas serving on http://localhost:${port}`)
 
   process.on("SIGINT", () => {
@@ -144,5 +187,14 @@ export async function serveApi(port: number): Promise<void> {
     process.exit(0)
   })
 
-  serve({ fetch: app.fetch, port })
+  const httpServer = serve({ fetch: app.fetch, port })
+
+  // Upgrade HTTP connections to WebSocket on /ws
+  httpServer.on('upgrade', (req, socket, head) => {
+    if (req.url === '/ws') {
+      wss.handleUpgrade(req, socket, head, (ws) => {
+        wss.emit('connection', ws, req)
+      })
+    }
+  })
 }

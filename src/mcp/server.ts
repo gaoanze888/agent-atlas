@@ -252,7 +252,17 @@ function createServer(): Server {
 
         case "atlas_get_context_pack": {
           const allNodes = nodes.list()
-          const pack = buildContextPack(allNodes, [], { // memories from adapters loaded later
+          // Load memories from pi memory if available
+          let memories: any[] = []
+          try {
+            const { PiMemoryAdapter } = await import("../sources/pi-memory.js")
+            const adapter = new PiMemoryAdapter()
+            await adapter.init()
+            memories = await adapter.list({ status: "active" })
+            // Take most relevant subset for context pack
+            memories = memories.slice(0, a.maxItems ? Math.floor((a.maxItems as number) / 2) : 10)
+          } catch {}
+          const pack = buildContextPack(allNodes, memories, {
             scope: a.scope as string | undefined,
             maxItems: a.maxItems as number | undefined,
           })
