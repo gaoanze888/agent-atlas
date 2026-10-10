@@ -6,91 +6,98 @@
   <title>Agent Atlas</title>
   <style>
     :root {
-      --bg: #0f1117;
-      --bg2: #161822;
-      --bg3: #1e2030;
-      --border: #2a2d3e;
-      --text: #e1e4ed;
-      --text2: #8b8fa3;
-      --gold: #f59e0b;
-      --blue: #3b82f6;
-      --green: #10b981;
-      --red: #ef4444;
-      --orange: #f97316;
-      --purple: #8b5cf6;
-      --cyan: #06b6d4;
-      --darkred: #991b1b;
-      --gray: #6b7280;
-      --yellow: #fbbf24;
+      --bg: #0f1117; --bg2: #161822; --bg3: #1e2030; --bg4: #252838;
+      --border: #2a2d3e; --border2: #3a3d4e;
+      --text: #e1e4ed; --text2: #8b8fa3; --text3: #5a5d70;
+      --gold: #f59e0b; --blue: #3b82f6; --green: #10b981; --red: #ef4444;
+      --orange: #f97316; --purple: #8b5cf6; --cyan: #06b6d4;
+      --darkred: #991b1b; --gray: #6b7280; --yellow: #fbbf24;
     }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
-    
+
     .app { display: flex; height: 100vh; flex-direction: column; }
-    .topbar { display: flex; align-items: center; padding: 8px 16px; background: var(--bg2); border-bottom: 1px solid var(--border); gap: 12px; }
-    .topbar h1 { font-size: 16px; font-weight: 600; }
+
+    /* Top bar */
+    .topbar { display: flex; align-items: center; padding: 6px 16px; background: var(--bg2); border-bottom: 1px solid var(--border); gap: 12px; }
+    .topbar h1 { font-size: 14px; font-weight: 600; white-space: nowrap; }
     .topbar h1 span { color: var(--blue); }
-    .search-box { flex: 0 0 240px; padding: 4px 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-size: 13px; }
-    .filters { display: flex; gap: 6px; }
-    .filter-btn { padding: 3px 8px; font-size: 12px; border: 1px solid var(--border); border-radius: 3px; background: transparent; color: var(--text2); cursor: pointer; }
+    .search-box { flex: 0 0 220px; padding: 4px 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-size: 12px; outline: none; }
+    .search-box:focus { border-color: var(--blue); }
+    .filters { display: flex; gap: 4px; }
+    .filter-btn { padding: 2px 8px; font-size: 11px; border: 1px solid var(--border); border-radius: 3px; background: transparent; color: var(--text2); cursor: pointer; }
     .filter-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
-    .stats { margin-left: auto; display: flex; gap: 12px; font-size: 12px; color: var(--text2); }
+    .stats { margin-left: auto; display: flex; gap: 10px; font-size: 11px; color: var(--text2); }
 
     .main { display: flex; flex: 1; overflow: hidden; }
-    
+
     /* Left: tree */
-    .tree-panel { width: 280px; background: var(--bg2); border-right: 1px solid var(--border); overflow-y: auto; padding: 8px 0; }
-    .tree-node { display: flex; align-items: center; padding: 4px 12px; cursor: pointer; font-size: 13px; gap: 6px; }
+    .tree-panel { width: 260px; background: var(--bg2); border-right: 1px solid var(--border); overflow-y: auto; padding: 4px 0; font-size: 12px; }
+    .tree-node { display: flex; align-items: center; padding: 3px 8px; cursor: pointer; gap: 4px; white-space: nowrap; }
     .tree-node:hover { background: var(--bg3); }
     .tree-node.selected { background: var(--bg3); border-left: 2px solid var(--blue); }
-    .tree-node .icon { font-size: 14px; width: 20px; text-align: center; }
-    .tree-node .title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .tree-node .dot { width: 6px; height: 6px; border-radius: 50%; }
-    .tree-indent { display: inline-block; width: 16px; }
-    
-    /* Center: topology canvas */
-    .canvas-panel { flex: 1; position: relative; overflow: hidden; background: var(--bg); }
+    .tree-node .icon { width: 18px; text-align: center; flex-shrink: 0; }
+    .tree-node .title { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+    .tree-node .dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .tree-indent { display: inline-block; width: 14px; }
+    .tree-toggle { width: 14px; text-align: center; color: var(--text3); cursor: pointer; font-size: 10px; flex-shrink: 0; }
+
+    /* Center: canvas */
+    .canvas-panel { flex: 1; position: relative; overflow: hidden; background: var(--bg); cursor: grab; }
+    .canvas-panel:active { cursor: grabbing; }
     .canvas-empty { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: var(--text2); }
-    .canvas-empty h2 { font-size: 20px; margin-bottom: 8px; color: var(--text); }
-    
-    /* SVG-based graph */
-    .graph-svg { width: 100%; height: 100%; }
-    .graph-node { cursor: pointer; }
-    .graph-node rect { rx: 6; ry: 6; }
-    .graph-node text { font-size: 12px; fill: var(--text); }
-    .graph-node .node-icon { font-size: 14px; }
-    
+    .canvas-empty h2 { font-size: 18px; margin-bottom: 8px; color: var(--text); }
+    .canvas-controls { position: absolute; bottom: 12px; right: 12px; display: flex; gap: 4px; z-index: 10; }
+    .canvas-controls button { width: 28px; height: 28px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg2); color: var(--text2); cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+    .canvas-controls button:hover { border-color: var(--blue); color: var(--text); }
+
     /* Right: detail */
-    .detail-panel { width: 320px; background: var(--bg2); border-left: 1px solid var(--border); overflow-y: auto; padding: 16px; }
-    .detail-empty { color: var(--text2); font-size: 13px; padding-top: 40px; text-align: center; }
-    .detail-type { font-size: 12px; color: var(--text2); margin-bottom: 4px; }
-    .detail-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-    .detail-status { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 500; }
-    .detail-section { margin-top: 16px; }
-    .detail-section h4 { font-size: 12px; color: var(--text2); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .detail-section p { font-size: 13px; line-height: 1.5; }
-    .detail-section .ev-item { font-size: 12px; padding: 4px 0; display: flex; gap: 6px; color: var(--text2); }
-    .detail-section .ev-icon { font-size: 14px; }
-    .detail-actions { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 6px; }
-    .btn { padding: 5px 10px; font-size: 12px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg3); color: var(--text); cursor: pointer; }
-    .btn:hover { border-color: var(--blue); }
-    .btn-danger { border-color: var(--red); color: var(--red); }
-    
-    /* Bottom: direction bar */
-    .bottombar { display: flex; align-items: center; padding: 8px 16px; background: var(--bg2); border-top: 1px solid var(--border); gap: 12px; font-size: 13px; min-height: 40px; }
-    .direction-label { color: var(--text2); }
+    .detail-panel { width: 300px; background: var(--bg2); border-left: 1px solid var(--border); overflow-y: auto; padding: 12px; font-size: 12px; }
+    .detail-empty { color: var(--text3); padding-top: 40px; text-align: center; }
+    .detail-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .detail-header .icon { font-size: 18px; }
+    .detail-header .info { flex: 1; }
+    .detail-type { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+    .detail-title { font-size: 14px; font-weight: 600; }
+    .detail-badges { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
+    .badge { padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 500; }
+    .badge-status { color: #fff; }
+    .badge-scope { background: var(--bg3); color: var(--cyan); border: 1px solid var(--border); }
+    .badge-tag { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
+    .detail-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+    .detail-section h4 { font-size: 10px; color: var(--text3); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .detail-section p { line-height: 1.5; color: var(--text2); }
+    .detail-section .child-item { padding: 2px 0; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+    .detail-section .child-item:hover { color: var(--text); }
+    .detail-section .ev-item { padding: 2px 0; display: flex; gap: 4px; color: var(--text2); }
+    .detail-actions { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 4px; }
+    .btn { padding: 3px 8px; font-size: 11px; border: 1px solid var(--border); border-radius: 3px; background: var(--bg3); color: var(--text2); cursor: pointer; }
+    .btn:hover { border-color: var(--blue); color: var(--text); }
+    .btn-danger:hover { border-color: var(--red); color: var(--red); }
+
+    /* Edit form */
+    .edit-form { margin-top: 12px; }
+    .edit-form label { display: block; font-size: 10px; color: var(--text3); margin: 8px 0 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .edit-form input, .edit-form textarea, .edit-form select { width: 100%; padding: 4px 6px; background: var(--bg3); border: 1px solid var(--border); border-radius: 3px; color: var(--text); font-size: 12px; outline: none; }
+    .edit-form input:focus, .edit-form textarea:focus { border-color: var(--blue); }
+    .edit-form textarea { min-height: 60px; resize: vertical; }
+    .edit-form .edit-actions { margin-top: 8px; display: flex; gap: 4px; }
+
+    /* Bottom: direction */
+    .bottombar { display: flex; align-items: center; padding: 6px 16px; background: var(--bg2); border-top: 1px solid var(--border); gap: 8px; font-size: 12px; min-height: 32px; }
+    .direction-label { color: var(--text3); font-size: 11px; }
     .direction-value { color: var(--green); font-weight: 500; }
-    .next-steps { margin-left: auto; display: flex; gap: 8px; }
-    .next-step-btn { padding: 3px 8px; font-size: 11px; border: 1px solid var(--border); border-radius: 3px; background: transparent; color: var(--text2); cursor: pointer; }
+    .next-steps { margin-left: auto; display: flex; gap: 4px; }
+    .next-step-btn { padding: 2px 6px; font-size: 10px; border: 1px solid var(--border); border-radius: 3px; background: transparent; color: var(--text3); cursor: pointer; }
     .next-step-btn:hover { border-color: var(--green); color: var(--green); }
 
-    /* Status colors */
-    .st-open { background: var(--yellow); }
-    .st-success { background: var(--green); }
-    .st-failed { background: var(--red); }
-    .st-blocked { background: var(--orange); }
-    .st-stale { background: var(--gray); }
-    .st-archived { background: var(--gray); }
+    /* Status badge colors */
+    .st-open { background: var(--yellow); color: #000; }
+    .st-success { background: var(--green); color: #000; }
+    .st-failed { background: var(--red); color: #fff; }
+    .st-blocked { background: var(--orange); color: #000; }
+    .st-stale { background: var(--gray); color: #fff; }
+    .st-archived { background: var(--gray); color: #fff; }
   </style>
 </head>
 <body>
@@ -112,9 +119,14 @@
     <div class="canvas-panel" id="canvas">
       <div class="canvas-empty" id="canvas-empty">
         <h2>No nodes yet</h2>
-        <p>Use MCP tools or the API to create nodes</p>
+        <p style="font-size:13px">Use MCP tools or the API to create nodes</p>
       </div>
       <svg class="graph-svg" id="graph-svg"></svg>
+      <div class="canvas-controls">
+        <button onclick="zoomIn()" title="Zoom in">+</button>
+        <button onclick="zoomOut()" title="Zoom out">−</button>
+        <button onclick="fitAll()" title="Fit all">⊡</button>
+      </div>
     </div>
     <div class="detail-panel" id="detail">
       <div class="detail-empty">Select a node to view details</div>
@@ -122,7 +134,7 @@
   </div>
 
   <div class="bottombar">
-    <span class="direction-label">▶ Direction:</span>
+    <span class="direction-label">▶</span>
     <span class="direction-value" id="direction">—</span>
     <div class="next-steps" id="next-steps"></div>
   </div>
@@ -131,24 +143,16 @@
 <script>
 const API = window.location.origin;
 
-const TYPE_ICONS = {
-  goal: '🎯', path: '🧭', attempt: '🔧', decision: '✅',
-  evidence: '📎', blocker: '⛔', dead_end: '☠️', next_step: '➡️'
-};
-const STATUS_COLORS = {
-  open: 'var(--yellow)', success: 'var(--green)', failed: 'var(--red)',
-  blocked: 'var(--orange)', stale: 'var(--gray)', archived: 'var(--gray)'
-};
-const NODE_COLORS = {
-  goal: 'var(--gold)', path: 'var(--blue)', attempt: 'var(--blue)',
-  decision: 'var(--purple)', evidence: 'var(--gray)', blocker: 'var(--red)',
-  dead_end: 'var(--darkred)', next_step: 'var(--green)'
-};
+const TYPE_ICONS = { goal:'🎯', path:'🧭', attempt:'🔧', decision:'✅', evidence:'📎', blocker:'⛔', dead_end:'☠️', next_step:'➡️' };
+const STATUS_COLORS = { open:'var(--yellow)', success:'var(--green)', failed:'var(--red)', blocked:'var(--orange)', stale:'var(--gray)', archived:'var(--gray)' };
+const NODE_COLORS = { goal:'var(--gold)', path:'var(--blue)', attempt:'var(--blue)', decision:'var(--purple)', evidence:'var(--gray)', blocker:'var(--red)', dead_end:'var(--darkred)', next_step:'var(--green)' };
+const EDGE_COLORS = { supports:'var(--green)', blocks:'var(--red)', contradicts:'var(--red)', supersedes:'var(--purple)', used_by:'var(--cyan)' };
 
-let nodes = [];
-let edges = [];
-let selectedId = null;
-let currentFilter = 'all';
+let nodes = [], edges = [], evidenceCache = {};
+let selectedId = null, currentFilter = 'all', editingId = null;
+let expandedNodes = new Set();
+let viewBox = { x: 0, y: 0, w: 800, h: 600 };
+let isPanning = false, panStart = { x: 0, y: 0 };
 
 async function load() {
   const [nodesRes, edgesRes] = await Promise.all([
@@ -160,297 +164,315 @@ async function load() {
   render();
 }
 
-function getChildren(parentId) {
-  return nodes.filter(n => n.parentId === parentId);
+async function loadEvidence(nodeId) {
+  if (!evidenceCache[nodeId]) {
+    try {
+      evidenceCache[nodeId] = await fetch(`${API}/api/nodes/${nodeId}/evidence`).then(r => r.json());
+    } catch { evidenceCache[nodeId] = []; }
+  }
+  return evidenceCache[nodeId];
 }
 
-function getRootNodes() {
-  return nodes.filter(n => !n.parentId);
+function getChildren(id) { return nodes.filter(n => n.parentId === id); }
+function getRootNodes() { return nodes.filter(n => !n.parentId); }
+
+function nodeMatchesFilter(n) {
+  if (currentFilter === 'all') return true;
+  if (currentFilter === 'open') return n.status === 'open' || n.status === 'success';
+  if (currentFilter === 'blocked') return n.type === 'blocker';
+  if (currentFilter === 'failed') return n.status === 'failed' || n.type === 'dead_end';
+  return true;
+}
+function hasMatchingDescendant(id) {
+  for (const c of getChildren(id)) {
+    if (nodeMatchesFilter(c) || hasMatchingDescendant(c.id)) return true;
+  }
+  return false;
 }
 
 function render() {
-  renderStats();
-  renderTree();
-  renderGraph();
-  renderDetail();
-  renderDirection();
+  renderStats(); renderTree(); renderGraph(); renderDetail(); renderDirection();
 }
 
 function renderStats() {
-  const goals = nodes.filter(n => n.type === 'goal' && n.status === 'open').length;
-  const deadEnds = nodes.filter(n => n.type === 'dead_end' && n.status !== 'archived').length;
-  const blockers = nodes.filter(n => n.type === 'blocker' && n.status !== 'archived').length;
-  document.getElementById('stats').innerHTML =
-    `<span>🎯 ${goals}</span> <span>☠️ ${deadEnds}</span> <span>⛔ ${blockers}</span> <span>📊 ${nodes.length}</span>`;
+  const g = nodes.filter(n => n.type === 'goal' && n.status === 'open').length;
+  const d = nodes.filter(n => n.type === 'dead_end' && n.status !== 'archived').length;
+  const b = nodes.filter(n => n.type === 'blocker' && n.status !== 'archived').length;
+  document.getElementById('stats').innerHTML = `🎯${g} ☠️${d} ⛔${b} 📊${nodes.length}`;
 }
 
 function renderTree() {
-  const tree = document.getElementById('tree');
+  const el = document.getElementById('tree');
   let html = '';
-  
-  function nodeMatchesFilter(node) {
-    if (currentFilter === 'all') return true;
-    if (currentFilter === 'open') return node.status === 'open' || node.status === 'success';
-    if (currentFilter === 'blocked') return node.type === 'blocker';
-    if (currentFilter === 'failed') return node.status === 'failed' || node.type === 'dead_end';
-    return true;
-  }
-
-  function hasMatchingDescendant(nodeId) {
-    const children = getChildren(nodeId);
-    for (const c of children) {
-      if (nodeMatchesFilter(c)) return true;
-      if (hasMatchingDescendant(c.id)) return true;
-    }
-    return false;
-  }
-
-  function renderNode(node, depth) {
-    // Apply filter: show node if it matches OR has matching descendants
-    const selfMatch = nodeMatchesFilter(node);
-    const descMatch = hasMatchingDescendant(node.id);
-    if (!selfMatch && !descMatch) return;
-    
+  function rn(node, depth) {
+    const sm = nodeMatchesFilter(node), dm = hasMatchingDescendant(node.id);
+    if (!sm && !dm) return;
     const icon = TYPE_ICONS[node.type] || '•';
-    const selected = node.id === selectedId ? ' selected' : '';
-    const opacity = (node.status === 'archived' || node.status === 'stale') ? 'opacity:0.4;' : '';
-    const dotColor = STATUS_COLORS[node.status] || 'var(--gray)';
-    
-    html += `<div class="tree-node${selected}" style="${opacity}" onclick="selectNode('${node.id}')">`;
+    const sel = node.id === selectedId ? ' selected' : '';
+    const op = (node.status === 'archived' || node.status === 'stale') ? 'opacity:0.4;' : '';
+    const dotC = STATUS_COLORS[node.status] || 'var(--gray)';
+    const children = getChildren(node.id);
+    const expanded = expandedNodes.has(node.id);
+    const toggle = children.length > 0 ? `<span class="tree-toggle" onclick="event.stopPropagation();toggleExpand('${node.id}')">${expanded ? '▾' : '▸'}</span>` : '<span class="tree-toggle"></span>';
+
+    html += `<div class="tree-node${sel}" style="${op}" onclick="selectNode('${node.id}')">`;
     for (let i = 0; i < depth; i++) html += '<span class="tree-indent"></span>';
+    html += toggle;
     html += `<span class="icon">${icon}</span>`;
     html += `<span class="title">${esc(node.title)}</span>`;
-    html += `<span class="dot" style="background:${dotColor}"></span>`;
+    html += `<span class="dot" style="background:${dotC}"></span>`;
     html += '</div>';
-    
-    const children = getChildren(node.id);
-    children.forEach(c => renderNode(c, depth + 1));
+    if (expanded || depth === 0) children.forEach(c => rn(c, depth + 1));
   }
-  
-  getRootNodes().forEach(n => renderNode(n, 0));
-  // Also render orphan nodes (no parent but not root type)
-  tree.innerHTML = html || '<div style="padding:12px;color:var(--text2);font-size:13px">No nodes</div>';
+  getRootNodes().forEach(n => rn(n, 0));
+  // Orphan nodes (no parent, not in tree)
+  nodes.filter(n => n.parentId && !nodes.find(p => p.id === n.parentId)).forEach(n => rn(n, 0));
+  el.innerHTML = html || '<div style="padding:12px;color:var(--text3);font-size:11px">No nodes</div>';
 }
 
 function renderGraph() {
   const svg = document.getElementById('graph-svg');
   const empty = document.getElementById('canvas-empty');
-  
-  // Filter nodes for graph
-  const filteredNodes = currentFilter === 'all' ? nodes : nodes.filter(n => nodeMatchesFilter(n));
-  
-  if (filteredNodes.length === 0) {
-    empty.style.display = '';
-    svg.innerHTML = '';
-    return;
-  }
+  if (nodes.length === 0) { empty.style.display = ''; svg.innerHTML = ''; return; }
   empty.style.display = 'none';
 
-  // Simple tree layout
-  const W = 160, H = 60, GAP_X = 30, GAP_Y = 80;
+  const W = 150, H = 48, GAP_X = 24, GAP_Y = 64, PAD = 30;
   const positions = {};
-  
-  function layout(nodeId, x, y, availableWidth) {
-    positions[nodeId] = { x: x + availableWidth / 2 - W / 2, y };
-    const children = getChildren(nodeId);
-    if (children.length === 0) return;
-    const childWidth = (availableWidth - GAP_X * (children.length - 1)) / children.length;
-    children.forEach((c, i) => {
-      layout(c.id, x + i * (childWidth + GAP_X), y + H + GAP_Y, childWidth);
-    });
+
+  function layout(id, x, y, aw) {
+    positions[id] = { x: x + aw / 2 - W / 2, y };
+    const ch = getChildren(id).filter(c => nodeMatchesFilter(c) || hasMatchingDescendant(c.id));
+    if (!ch.length) return;
+    const cw = (aw - GAP_X * (ch.length - 1)) / ch.length;
+    ch.forEach((c, i) => layout(c.id, x + i * (cw + GAP_X), y + H + GAP_Y, cw));
   }
-  
+
   const roots = getRootNodes().filter(n => nodeMatchesFilter(n) || hasMatchingDescendant(n.id));
-  const totalWidth = Math.max(roots.length * (W + GAP_X), 600);
-  roots.forEach((r, i) => {
-    layout(r.id, i * (totalWidth / roots.length), 20, totalWidth / roots.length);
-  });
-  
-  // Render SVG
-  let svgHtml = '';
-  
-  // Edges
-  edges.forEach(e => {
-    if (!positions[e.fromId] || !positions[e.toId]) return;
-    const from = positions[e.fromId];
-    const to = positions[e.toId];
-    const x1 = from.x + W / 2, y1 = from.y + H;
-    const x2 = to.x + W / 2, y2 = to.y;
-    svgHtml += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--border)" stroke-width="1.5"/>`;
-  });
-  
-  // Parent-child lines (from contains edges or parentId)
+  const tw = Math.max(roots.length * (W + GAP_X), 400);
+  roots.forEach((r, i) => layout(r.id, i * (tw / roots.length), PAD, tw / roots.length));
+
+  let s = '';
+  // Defs for arrowhead
+  s += '<defs><marker id="arrow" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="var(--text3)"/></marker></defs>';
+
+  // Parent-child edges with arrows
   nodes.forEach(n => {
     if (!n.parentId || !positions[n.parentId] || !positions[n.id]) return;
-    const from = positions[n.parentId];
-    const to = positions[n.id];
-    const x1 = from.x + W / 2, y1 = from.y + H;
-    const x2 = to.x + W / 2, y2 = to.y;
-    svgHtml += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--border)" stroke-width="1"/>`;
+    const f = positions[n.parentId], t = positions[n.id];
+    const x1 = f.x + W / 2, y1 = f.y + H, x2 = t.x + W / 2, y2 = t.y;
+    s += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2 - 4}" stroke="var(--border2)" stroke-width="1" marker-end="url(#arrow)"/>`;
   });
-  
+
+  // Non-contains edges (supports, blocks, etc.)
+  edges.forEach(e => {
+    if (e.type === 'contains' || !positions[e.fromId] || !positions[e.toId]) return;
+    const f = positions[e.fromId], t = positions[e.toId];
+    const color = EDGE_COLORS[e.type] || 'var(--text3)';
+    const dash = e.type === 'contradicts' || e.type === 'supersedes' ? '4,3' : '';
+    s += `<line x1="${f.x + W}" y1="${f.y + H/2}" x2="${t.x}" y2="${t.y + H/2}" stroke="${color}" stroke-width="1" stroke-dasharray="${dash}" marker-end="url(#arrow)"/>`;
+  });
+
   // Nodes
   nodes.forEach(n => {
     if (!positions[n.id]) return;
-    const pos = positions[n.id];
+    const p = positions[n.id];
     const color = NODE_COLORS[n.type] || 'var(--blue)';
-    const filterMatch = nodeMatchesFilter(n);
-    const opacity = (!filterMatch || n.status === 'archived' || n.status === 'stale') ? 0.25 : 1;
+    const fm = nodeMatchesFilter(n);
+    const op = (!fm || n.status === 'archived' || n.status === 'stale') ? 0.2 : 1;
     const icon = TYPE_ICONS[n.type] || '•';
     const sel = n.id === selectedId;
-    
-    svgHtml += `<g class="graph-node" onclick="selectNode('${n.id}')" style="opacity:${opacity}">`;
-    svgHtml += `<rect x="${pos.x}" y="${pos.y}" width="${W}" height="${H}" fill="var(--bg2)" stroke="${sel ? 'var(--blue)' : color}" stroke-width="${sel ? 2 : 1}" rx="6"/>`;
-    svgHtml += `<text x="${pos.x + 10}" y="${pos.y + 22}" font-size="14">${icon}</text>`;
-    svgHtml += `<text x="${pos.x + 28}" y="${pos.y + 22}" font-size="12" fill="var(--text)">${esc(n.title.slice(0, 16))}</text>`;
-    svgHtml += `<text x="${pos.x + 10}" y="${pos.y + 42}" font-size="10" fill="var(--text2)">${n.status}</text>`;
-    svgHtml += `<circle cx="${pos.x + W - 10}" cy="${pos.y + 10}" r="4" fill="${STATUS_COLORS[n.status] || 'var(--gray)'}"/>`;
-    svgHtml += '</g>';
+    const borderColor = sel ? 'var(--blue)' : color;
+    const bw = sel ? 2 : 1;
+
+    s += `<g class="graph-node" onclick="selectNode('${n.id}')" style="opacity:${op}">`;
+    // Shadow for selected
+    if (sel) s += `<rect x="${p.x-1}" y="${p.y-1}" width="${W+2}" height="${H+2}" fill="none" stroke="var(--blue)" stroke-width="3" rx="8" opacity="0.3"/>`;
+    s += `<rect x="${p.x}" y="${p.y}" width="${W}" height="${H}" fill="var(--bg2)" stroke="${borderColor}" stroke-width="${bw}" rx="6"/>`;
+    // Left accent bar
+    s += `<rect x="${p.x}" y="${p.y}" width="3" height="${H}" fill="${color}" rx="1"/>`;
+    // Icon
+    s += `<text x="${p.x + 10}" y="${p.y + 19}" font-size="13">${icon}</text>`;
+    // Title (up to 18 chars)
+    const title = n.title.length > 18 ? n.title.slice(0, 17) + '…' : n.title;
+    s += `<text x="${p.x + 26}" y="${p.y + 19}" font-size="11" fill="var(--text)">${esc(title)}</text>`;
+    // Status + type label
+    s += `<text x="${p.x + 10}" y="${p.y + 36}" font-size="9" fill="var(--text3)">${n.status} · ${n.type.replace('_',' ')}</text>`;
+    // Status dot
+    s += `<circle cx="${p.x + W - 8}" cy="${p.y + 8}" r="3" fill="${STATUS_COLORS[n.status] || 'var(--gray)'}"/>`;
+    s += '</g>';
   });
-  
-  svg.innerHTML = svgHtml;
-  
-  // Auto-size SVG
-  const allPos = Object.values(positions);
-  if (allPos.length > 0) {
-    const maxX = Math.max(...allPos.map(p => p.x)) + W + 40;
-    const maxY = Math.max(...allPos.map(p => p.y)) + H + 40;
-    svg.setAttribute('viewBox', `0 0 ${maxX} ${maxY}`);
+
+  svg.innerHTML = s;
+
+  // Auto-fit on first render
+  const allP = Object.values(positions);
+  if (allP.length > 0) {
+    if (viewBox._auto === undefined) {
+      viewBox = {
+        x: Math.min(...allP.map(p => p.x)) - PAD,
+        y: Math.min(...allP.map(p => p.y)) - PAD,
+        w: Math.max(...allP.map(p => p.x)) + W + PAD - Math.min(...allP.map(p => p.x)) + PAD,
+        h: Math.max(...allP.map(p => p.y)) + H + PAD - Math.min(...allP.map(p => p.y)) + PAD,
+        _auto: true
+      };
+    }
+    svg.setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`);
   }
 }
 
-function renderDetail() {
+async function renderDetail() {
   const el = document.getElementById('detail');
-  if (!selectedId) {
-    el.innerHTML = '<div class="detail-empty">Select a node to view details</div>';
-    return;
-  }
-  
+  if (!selectedId) { el.innerHTML = '<div class="detail-empty">Select a node to view details</div>'; return; }
   const node = nodes.find(n => n.id === selectedId);
-  if (!node) {
-    el.innerHTML = '<div class="detail-empty">Node not found</div>';
-    return;
-  }
-  
+  if (!node) { el.innerHTML = '<div class="detail-empty">Node not found</div>'; return; }
+
+  // Load evidence
+  const ev = await loadEvidence(node.id);
   const icon = TYPE_ICONS[node.type] || '•';
-  const statusColor = STATUS_COLORS[node.status] || 'var(--gray)';
   const children = getChildren(node.id);
   const parent = node.parentId ? nodes.find(n => n.id === node.parentId) : null;
-  const relatedEdges = edges.filter(e => e.fromId === node.id || e.toId === node.id);
-  
-  let html = '';
-  html += `<div class="detail-type">${icon} ${node.type}</div>`;
-  html += `<div class="detail-title">${esc(node.title)}</div>`;
-  html += `<div class="detail-status st-${node.status}">${node.status}</div>`;
-  
-  if (node.scope && node.scope !== 'global') {
-    html += `<div style="margin-top:8px;font-size:12px;color:var(--cyan)">📍 ${esc(node.scope)}</div>`;
+
+  // Editing mode
+  if (editingId === node.id) {
+    el.innerHTML = renderEditForm(node);
+    return;
   }
-  
-  if (node.summary) {
-    html += `<div class="detail-section"><h4>Summary</h4><p>${esc(node.summary)}</p></div>`;
-  }
-  
-  if (node.tags && node.tags.length > 0) {
-    html += `<div class="detail-section"><h4>Tags</h4><p>${node.tags.map(t => `<span style="background:var(--bg3);padding:2px 6px;border-radius:3px;font-size:11px">#${t}</span>`).join(' ')}</p></div>`;
-  }
-  
-  if (parent) {
-    html += `<div class="detail-section"><h4>Parent</h4><p>${TYPE_ICONS[parent.type]} ${esc(parent.title)}</p></div>`;
-  }
-  
-  if (children.length > 0) {
-    html += `<div class="detail-section"><h4>Children (${children.length})</h4>`;
-    children.forEach(c => {
-      html += `<p style="font-size:12px">${TYPE_ICONS[c.type]} ${esc(c.title)} <span class="dot st-${c.status}" style="display:inline-block;width:6px;height:6px;border-radius:50%;vertical-align:middle"></span></p>`;
+
+  let h = '';
+  // Header
+  h += `<div class="detail-header"><span class="icon">${icon}</span><div class="info"><div class="detail-type">${node.type.replace('_',' ')}</div><div class="detail-title">${esc(node.title)}</div></div></div>`;
+
+  // Badges
+  h += '<div class="detail-badges">';
+  h += `<span class="badge badge-status st-${node.status}">${node.status}</span>`;
+  if (node.scope && node.scope !== 'global') h += `<span class="badge badge-scope">${esc(node.scope)}</span>`;
+  if (node.tags) node.tags.forEach(t => h += `<span class="badge badge-tag">#${esc(t)}</span>`);
+  h += '</div>';
+
+  // Summary
+  if (node.summary) h += `<div class="detail-section"><h4>Summary</h4><p>${esc(node.summary)}</p></div>`;
+
+  // Evidence
+  if (ev.length > 0) {
+    h += '<div class="detail-section"><h4>Evidence</h4>';
+    ev.forEach(e => {
+      const kindIcons = { command:'⚡', file:'📄', url:'🔗', test:'🧪', conversation:'💬', manual:'✍️' };
+      h += `<div class="ev-item"><span>${kindIcons[e.kind]||'📎'}</span><span>${esc(e.summary)}</span></div>`;
     });
-    html += '</div>';
+    h += '</div>';
   }
-  
-  html += `<div class="detail-section"><h4>Meta</h4>`;
-  html += `<p style="font-size:12px;color:var(--text2)">Created: ${new Date(node.createdAt).toLocaleString()}</p>`;
-  html += `<p style="font-size:12px;color:var(--text2)">Updated: ${new Date(node.updatedAt).toLocaleString()}</p>`;
-  if (node.agentName) html += `<p style="font-size:12px;color:var(--text2)">Agent: ${esc(node.agentName)}</p>`;
-  html += '</div>';
-  
-  html += `<div class="detail-actions">`;
-  html += `<button class="btn" onclick="editNode('${node.id}')">Edit</button>`;
-  if (node.type === 'path') html += `<button class="btn btn-danger" onclick="markDeadEnd('${node.id}')">Mark Dead End</button>`;
-  html += `<button class="btn" onclick="archiveNode('${node.id}')">Archive</button>`;
-  html += `<button class="btn btn-danger" onclick="deleteNode('${node.id}')">Delete</button>`;
-  html += '</div>';
-  
-  el.innerHTML = html;
+
+  // Parent
+  if (parent) h += `<div class="detail-section"><h4>Parent</h4><div class="child-item" onclick="selectNode('${parent.id}')">${TYPE_ICONS[parent.type]} ${esc(parent.title)}</div></div>`;
+
+  // Children
+  if (children.length > 0) {
+    h += `<div class="detail-section"><h4>Children (${children.length})</h4>`;
+    children.forEach(c => {
+      h += `<div class="child-item" onclick="selectNode('${c.id}')">${TYPE_ICONS[c.type]} ${esc(c.title)} <span class="dot" style="background:${STATUS_COLORS[c.status]||'var(--gray)'};width:5px;height:5px;border-radius:50%;display:inline-block"></span></div>`;
+    });
+    h += '</div>';
+  }
+
+  // Meta
+  h += '<div class="detail-section"><h4>Meta</h4>';
+  h += `<p>Created: ${fmtTime(node.createdAt)}</p>`;
+  h += `<p>Updated: ${fmtTime(node.updatedAt)}</p>`;
+  if (node.agentName) h += `<p>Agent: ${esc(node.agentName)}</p>`;
+  h += '</div>';
+
+  // Actions
+  h += '<div class="detail-actions">';
+  h += `<button class="btn" onclick="startEdit('${node.id}')">Edit</button>`;
+  if (node.type === 'path' && node.status !== 'failed') h += `<button class="btn btn-danger" onclick="markDeadEnd('${node.id}')">☠️ Dead End</button>`;
+  h += `<button class="btn" onclick="archiveNode('${node.id}')">Archive</button>`;
+  h += `<button class="btn btn-danger" onclick="deleteNode('${node.id}')">Delete</button>`;
+  h += '</div>';
+
+  el.innerHTML = h;
+}
+
+function renderEditForm(node) {
+  const statuses = ['open','success','failed','blocked','stale','archived'];
+  let h = '<div class="edit-form">';
+  h += '<label>Title</label>';
+  h += `<input id="edit-title" value="${esc(node.title)}" />`;
+  h += '<label>Summary</label>';
+  h += `<textarea id="edit-summary">${esc(node.summary || '')}</textarea>`;
+  h += '<label>Status</label>';
+  h += `<select id="edit-status">${statuses.map(s => `<option value="${s}"${s===node.status?' selected':''}>${s}</option>`).join('')}</select>`;
+  h += '<label>Tags (comma-separated)</label>';
+  h += `<input id="edit-tags" value="${(node.tags||[]).join(', ')}" />`;
+  h += '<div class="edit-actions">';
+  h += `<button class="btn" onclick="saveEdit('${node.id}')" style="background:var(--blue);color:#fff;border-color:var(--blue)">Save</button>`;
+  h += `<button class="btn" onclick="cancelEdit()">Cancel</button>`;
+  h += '</div></div>';
+  return h;
 }
 
 function renderDirection() {
-  const nextSteps = nodes.filter(n => n.type === 'next_step' && n.status === 'open');
-  const dir = document.getElementById('direction');
-  const steps = document.getElementById('next-steps');
-  
-  if (nextSteps.length > 0) {
-    dir.textContent = nextSteps[0].title;
-    steps.innerHTML = nextSteps.slice(1).map(ns =>
-      `<button class="next-step-btn">${esc(ns.title)}</button>`
-    ).join('');
-  } else {
-    dir.textContent = '—';
-    steps.innerHTML = '';
-  }
+  const ns = nodes.filter(n => n.type === 'next_step' && n.status === 'open');
+  document.getElementById('direction').textContent = ns.length > 0 ? ns[0].title : '—';
+  document.getElementById('next-steps').innerHTML = ns.slice(1).map(n =>
+    `<button class="next-step-btn">${esc(n.title)}</button>`
+  ).join('');
 }
 
 // Actions
-window.selectNode = function(id) {
-  selectedId = id;
-  render();
+window.selectNode = function(id) { selectedId = id; editingId = null; evidenceCache = {}; render(); };
+window.toggleExpand = function(id) { expandedNodes.has(id) ? expandedNodes.delete(id) : expandedNodes.add(id); renderTree(); };
+window.startEdit = function(id) { editingId = id; renderDetail(); };
+window.cancelEdit = function() { editingId = null; renderDetail(); };
+window.saveEdit = async function(id) {
+  const title = document.getElementById('edit-title').value;
+  const summary = document.getElementById('edit-summary').value;
+  const status = document.getElementById('edit-status').value;
+  const tags = document.getElementById('edit-tags').value.split(',').map(t => t.trim()).filter(Boolean);
+  await fetch(`${API}/api/nodes/${id}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ title, summary, status, tags }) });
+  editingId = null; await load();
 };
-
-window.editNode = async function(id) {
-  const node = nodes.find(n => n.id === id);
-  if (!node) return;
-  const newTitle = prompt('Title:', node.title);
-  if (newTitle === null) return;
-  const newSummary = prompt('Summary:', node.summary || '');
-  await fetch(`${API}/api/nodes/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title: newTitle, summary: newSummary || undefined }),
-  });
-  await load();
-};
-
 window.markDeadEnd = async function(id) {
-  if (!confirm('Mark this as a dead end?')) return;
-  await fetch(`${API}/api/nodes/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status: 'failed' }),
-  });
-  // Create dead_end child
+  if (!confirm('Mark as dead end?')) return;
+  await fetch(`${API}/api/nodes/${id}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status: 'failed' }) });
   const node = nodes.find(n => n.id === id);
-  await fetch(`${API}/api/nodes`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type: 'dead_end', title: `Dead end: ${node?.title}`, parentId: id, status: 'failed' }),
-  });
+  await fetch(`${API}/api/nodes`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ type: 'dead_end', title: `Dead end: ${node?.title}`, parentId: id, status: 'failed', summary: 'Marked as dead end by user' }) });
   await load();
 };
-
 window.archiveNode = async function(id) {
-  await fetch(`${API}/api/nodes/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ status: 'archived' }),
-  });
+  await fetch(`${API}/api/nodes/${id}`, { method: 'PATCH', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ status: 'archived' }) });
   await load();
 };
-
 window.deleteNode = async function(id) {
   if (!confirm('Delete this node?')) return;
   await fetch(`${API}/api/nodes/${id}`, { method: 'DELETE' });
-  selectedId = null;
-  await load();
+  selectedId = null; await load();
 };
+
+// Zoom & Pan
+window.zoomIn = function() { viewBox.w *= 0.8; viewBox.h *= 0.8; updateViewBox(); };
+window.zoomOut = function() { viewBox.w *= 1.25; viewBox.h *= 1.25; updateViewBox(); };
+window.fitAll = function() { viewBox._auto = undefined; renderGraph(); };
+function updateViewBox() { document.getElementById('graph-svg').setAttribute('viewBox', `${viewBox.x} ${viewBox.y} ${viewBox.w} ${viewBox.h}`); }
+
+// Mouse pan
+const canvas = document.getElementById('canvas');
+canvas.addEventListener('mousedown', e => { if (e.target.tagName !== 'text' && e.target.tagName !== 'rect') { isPanning = true; panStart = { x: e.clientX, y: e.clientY }; } });
+canvas.addEventListener('mousemove', e => {
+  if (!isPanning) return;
+  const dx = (e.clientX - panStart.x) * viewBox.w / canvas.clientWidth;
+  const dy = (e.clientY - panStart.y) * viewBox.h / canvas.clientHeight;
+  viewBox.x -= dx; viewBox.y -= dy;
+  panStart = { x: e.clientX, y: e.clientY };
+  updateViewBox();
+});
+canvas.addEventListener('mouseup', () => isPanning = false);
+canvas.addEventListener('mouseleave', () => isPanning = false);
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const factor = e.deltaY > 0 ? 1.1 : 0.9;
+  viewBox.w *= factor; viewBox.h *= factor;
+  updateViewBox();
+}, { passive: false });
 
 // Filters
 document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -458,27 +480,27 @@ document.querySelectorAll('.filter-btn').forEach(btn => {
     document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     currentFilter = btn.dataset.filter;
+    viewBox._auto = undefined;
     render();
   });
 });
 
 // Search
-document.getElementById('search').addEventListener('input', async (e) => {
+document.getElementById('search').addEventListener('input', async e => {
   const q = e.target.value.trim();
   if (!q) { await load(); return; }
-  const results = await fetch(`${API}/api/search?q=${encodeURIComponent(q)}`).then(r => r.json());
-  nodes = results;
+  nodes = await fetch(`${API}/api/search?q=${encodeURIComponent(q)}`).then(r => r.json());
   render();
 });
 
-function esc(s) {
-  if (!s) return '';
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
+function esc(s) { return s ? s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;') : ''; }
+function fmtTime(s) { try { const d = new Date(s); const now = new Date(); const diff = (now - d) / 1000; if (diff < 60) return 'just now'; if (diff < 3600) return `${Math.floor(diff/60)}m ago`; if (diff < 86400) return `${Math.floor(diff/3600)}h ago`; return d.toLocaleDateString(); } catch { return s; } }
 
 // Auto-refresh
 setInterval(load, 3000);
-load();
+// Expand all on first load
+nodes.forEach(n => { if (getChildren(n.id).length > 0) expandedNodes.add(n.id); });
+load().then(() => { nodes.forEach(n => { if (getChildren(n.id).length > 0) expandedNodes.add(n.id); }); renderTree(); });
 </script>
 </body>
 </html>
