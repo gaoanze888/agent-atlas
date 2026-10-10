@@ -188,13 +188,28 @@ function renderTree() {
   const tree = document.getElementById('tree');
   let html = '';
   
-  function renderNode(node, depth) {
-    // Apply filter
-    if (currentFilter !== 'all') {
-      if (currentFilter === 'open' && node.status !== 'open' && node.status !== 'success') return;
-      if (currentFilter === 'blocked' && node.type !== 'blocker') return;
-      if (currentFilter === 'failed' && node.status !== 'failed' && node.type !== 'dead_end') return;
+  function nodeMatchesFilter(node) {
+    if (currentFilter === 'all') return true;
+    if (currentFilter === 'open') return node.status === 'open' || node.status === 'success';
+    if (currentFilter === 'blocked') return node.type === 'blocker';
+    if (currentFilter === 'failed') return node.status === 'failed' || node.type === 'dead_end';
+    return true;
+  }
+
+  function hasMatchingDescendant(nodeId) {
+    const children = getChildren(nodeId);
+    for (const c of children) {
+      if (nodeMatchesFilter(c)) return true;
+      if (hasMatchingDescendant(c.id)) return true;
     }
+    return false;
+  }
+
+  function renderNode(node, depth) {
+    // Apply filter: show node if it matches OR has matching descendants
+    const selfMatch = nodeMatchesFilter(node);
+    const descMatch = hasMatchingDescendant(node.id);
+    if (!selfMatch && !descMatch) return;
     
     const icon = TYPE_ICONS[node.type] || '•';
     const selected = node.id === selectedId ? ' selected' : '';
@@ -221,7 +236,10 @@ function renderGraph() {
   const svg = document.getElementById('graph-svg');
   const empty = document.getElementById('canvas-empty');
   
-  if (nodes.length === 0) {
+  // Filter nodes for graph
+  const filteredNodes = currentFilter === 'all' ? nodes : nodes.filter(n => nodeMatchesFilter(n));
+  
+  if (filteredNodes.length === 0) {
     empty.style.display = '';
     svg.innerHTML = '';
     return;
@@ -242,7 +260,7 @@ function renderGraph() {
     });
   }
   
-  const roots = getRootNodes();
+  const roots = getRootNodes().filter(n => nodeMatchesFilter(n) || hasMatchingDescendant(n.id));
   const totalWidth = Math.max(roots.length * (W + GAP_X), 600);
   roots.forEach((r, i) => {
     layout(r.id, i * (totalWidth / roots.length), 20, totalWidth / roots.length);
@@ -276,7 +294,8 @@ function renderGraph() {
     if (!positions[n.id]) return;
     const pos = positions[n.id];
     const color = NODE_COLORS[n.type] || 'var(--blue)';
-    const opacity = (n.status === 'archived' || n.status === 'stale') ? 0.4 : 1;
+    const filterMatch = nodeMatchesFilter(n);
+    const opacity = (!filterMatch || n.status === 'archived' || n.status === 'stale') ? 0.25 : 1;
     const icon = TYPE_ICONS[n.type] || '•';
     const sel = n.id === selectedId;
     
